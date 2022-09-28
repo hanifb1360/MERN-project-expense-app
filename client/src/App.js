@@ -1,14 +1,30 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-
-
-function App() {
-
-const [form, setForm] = useState({
+const InitialForm = {
   amount: 0,
   description: " ",
   date: " ",
-});
+}
+
+function App() {
+
+const [form, setForm] = useState(InitialForm);
+
+const [transactions, setTransactions] = useState([])
+
+useEffect(() => {
+  
+fetchTransactions()
+ 
+}, []);
+
+async function fetchTransactions() {
+  const res = await fetch ('http://localhost:4000/transaction');
+  const {data} = await res.json();
+  setTransactions(data);
+  
+}
+
 
 function handleInput(e){
 
@@ -21,10 +37,19 @@ function handleInput(e){
     e.preventDefault();
     const res = await fetch('http://localhost:4000/transaction', { 
       method: "POST",
-      body: form,
+      body: JSON.stringify(form),
+      headers: {
+        "content-type": "application/json",
+      },
     });
-    console.log(res);
+    
+    // to reload new transaction
+    if (res.ok){
+      setForm(InitialForm);
+      fetchTransactions();
+    }
   }
+  
   return (
     <div>
       <form onSubmit={handleSubmit}>
@@ -57,6 +82,29 @@ function handleInput(e){
       <button type="submit">SUBMIT</button>
 
       </form>
+      <br />
+      <section>
+        <table>
+        <thead>
+        <th>Amount</th>
+        <th>Description</th>
+        <th>Date</th>
+        </thead>
+        <tbody>
+        {transactions.map((trx) => (
+          <tr key={trx._id}>
+          <td>{trx.amount}</td>
+          <td>{trx.description}</td>
+          <td>{trx.date}</td>
+        </tr>
+
+        ))}
+        
+
+        </tbody>
+
+        </table>
+      </section>
     </div>
   );
 }
